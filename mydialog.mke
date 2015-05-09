@@ -1,0 +1,76 @@
+#----------------------------------------------------------------------
+#
+#   mydialog.mke -- make file for mydialog.mc
+#
+#----------------------------------------------------------------------
+#-------------------------------------------------
+#	Define constants specific to this example
+#-------------------------------------------------
+%if defined (SOURCEDIR)
+    baseDir    = $(SOURCEDIR)mydialog/
+%else
+    %if defined (_MakeFilePath)
+	    baseDir    = $(_MakeFilePath)
+	%else	
+        %if defined (powerc) || (m68k)
+            baseDir    = /
+        %else
+            baseDir    = ./
+		%endif
+    %endif
+%endif
+
+objectDir  = $(baseDir)/objects/
+privateInc = $(baseDir)
+
+Objs  = $(objectDir)mydialog.mo
+
+Rscs  = $(objectDir)mydialog.rsc \
+        $(objectDir)mydiatt.rsc \
+        $(objectDir)mydialog.mp
+
+%include mdl.mki
+%if defined (SOURCEDIR)
+    %include $(SOURCEDIR)compile.mki
+%endif
+
+#---------------------------------------------
+#	Compile Dialog Resources
+#---------------------------------------------
+$(objectDir)mydialog.rsc        : $(baseDir)mydialog.r
+
+#---------------------------------------------
+#	Make resource to publish structure(s)
+#---------------------------------------------
+$(objectDir)mydiatt.r          : $(SOURCEDIR)mydiatt.mt $(SOURCEDIR)mydialog.h
+
+$(objectDir)mydiatt.rsc        : $(objectDir)mydiatt.r
+
+#---------------------------------------------
+#	Compile and link MDL Application
+#---------------------------------------------
+$(objectDir)mydialog.mo          : $(baseDir)mydialog.mc
+
+$(objectDir)mydialog.mp          : $(objectDir)mydialog.mo
+	$(msg)
+        >$(objectDir)temp1.cmd
+	-a$@
+	-s6000
+        $(linkOpts)
+        $(Objs)
+	$(mdlLibs)ditemlib.ml
+	<
+        $(linkCmd) @$(objectDir)temp1.cmd
+	~time
+
+#---------------------------------------------
+#	Merge Objects into one file
+#---------------------------------------------
+$(objectDir)mydialog.ma            : $(Rscs)
+	$(msg)	
+	>$(objectDir)temp.cmd
+	-o$@
+        $(Rscs)
+	<
+	$(rscLibCmd) @$(objectDir)temp.cmd
+	~time
